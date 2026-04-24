@@ -569,3 +569,22 @@ body {
     font-size: 1.2rem;
 }
 
+/* Make sure live results container is visible */
+#live-full-frame {
+    display: block !important;
+    margin-top: 1rem;
+}
+
+#live-results-container {
+    display: block !important;
+}
+
+#main-live-image {
+    display: block !important;
+    width: 100%;
+    max-width: 600px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    margin-top: 10px;
+}
+

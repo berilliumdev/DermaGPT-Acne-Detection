@@ -8,24 +8,20 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="../static/css/style.css">
-
-   
 </head>
 
 <body>
     <div class="dashboard">
         <!-- Sidebar -->
         <div class="sidebar">
-           
-               <div class="logo">
-                 <span class="logo-icon"><i class="fas fa-disease"></i> </span>
+            <div class="logo">
+                <span class="logo-icon"><i class="fas fa-disease"></i> </span>
                 <span>DermaGPT</span>
-                 </div>
+            </div>
             <a href="#" class="nav-item active">
                 <i class="fas fa-camera"></i>
                 <span>Image Analysis</span>
             </a>
-      
         </div>
 
         <!-- Main Content -->
@@ -36,17 +32,16 @@
                     <i class="fas fa-question-circle"></i> Help
                 </button>
             </div>
+            
             <div class="upload-tips">
                 <h3><i class="fas fa-lightbulb"></i> Upload Tips</h3>
                 <ul>
                     <li>For best results, take images in good lighting</li>
                     <li>Take a well-lit, front-facing photograph that clearly displays all regions of the face for accurate analysis.</li>
                     <li>Capture the image in a steady, still position to avoid blur and ensure sharp detail.</li>
-
-
-       
                 </ul>
             </div>
+            
             <!-- Processing Options -->
             <div class="processing-options">
                 <div class="option-card">
@@ -54,7 +49,7 @@
                         <i class="fas fa-file-alt"></i>
                     </div>
                     <h3 class="option-title">Text Analysis</h3>
-                    <p class="option-description">Upload a skin image to receive detailed textual analysis </p>
+                    <p class="option-description">Upload a skin image to receive detailed textual analysis</p>
 
                     <div class="upload-area" id="text-upload-area">
                         <i class="fas fa-cloud-upload-alt"></i>
@@ -86,7 +81,7 @@
                         <i class="fas fa-search-plus"></i>
                     </div>
                     <h3 class="option-title">Acne Detection</h3>
-                    <p class="option-description">Upload a skin image to detect and mark acne lesions </p>
+                    <p class="option-description">Upload a skin image to detect and mark acne lesions</p>
 
                     <div class="upload-area" id="image-upload-area">
                         <i class="fas fa-cloud-upload-alt"></i>
@@ -131,15 +126,9 @@
             <div class="results-section" id="image-results">
                 <div class="results-card">
                     <h3><i class="fas fa-search-plus"></i> Acne Detection Results</h3>
-                    <div class="marked-image-container" id="marked-images-container">
-                        
-                    </div>
+                    <div class="marked-image-container" id="marked-images-container"></div>
                 </div>
             </div>
-
-
-
-
 
             <!-- Live Capture Card -->
             <div class="option-card">
@@ -148,7 +137,7 @@
                 </div>
                 <h3 class="option-title">Live Capture</h3>
                 <p class="option-description">
-                    Use your webcam to segment and analyze 9 facial regions in one shot
+                    Use your webcam to segment and analyze 9 facial regions in real-time
                 </p>
 
                 <!-- Camera Access Button -->
@@ -163,86 +152,56 @@
                     </div>
                     <div class="preview-actions" style="margin-top:1rem; text-align: center;">
                         <button class="btn btn-outline" id="cancel-live-btn">
-                            <i class="fas fa-times"></i> Cancel
+                            <i class="fas fa-times"></i> Close Camera
                         </button>
-                        <button class="btn btn-primary" id="capture-btn">
-                            <i class="fas fa-camera"></i> Capture & Analyze
-                        </button>
+                    </div>
+                    <div style="text-align: center; margin-top: 10px;">
+                        <small><i class="fas fa-sync-alt"></i> Real-time detection active - results update automatically</small>
                     </div>
                 </div>
 
                 <div id="live-results-container" style="display:none;">
-                        <div class="preview-actions" style="margin-bottom: 1rem;">
-                            <button class="btn btn-outline" id="retake-live-btn">
-                                    <i class="fas fa-redo"></i> Retake Photo
-                            </button>
-                         </div>
+                    <div class="preview-actions" style="margin-bottom: 1rem;">
+                        <button class="btn btn-outline" id="retake-live-btn">
+                            <i class="fas fa-redo"></i> Restart Camera
+                        </button>
+                    </div>
                     <div class="results-section" id="live-full-frame" style="margin-top:1rem;">
                         <h4>Full Analysis</h4>
                         <img id="main-live-image" src="" alt="Full annotated frame"
-                            style="width:100%; max-width:600px; border-radius:8px;">
+    style="width:100%; max-width:600px; border-radius:8px; border: 1px solid #ddd;">
                         <div id="severity-summary" style="margin-top:1rem;"></div>
                     </div>
 
                     <div class="results-section" id="live-results" style="margin-top:2rem;">
                         <h4>Region Analysis</h4>
-                        <div class="grid-3x3" id="live-grid">
-                            <!-- Will be populated dynamically -->
+                        <div class="grid-3x3" id="live-grid"></div>
+                    </div>
+                    
+                    <div class="results-section" id="live-phi-analysis" style="margin-top:2rem; display: none;">
+                        <h4><i class="fas fa-file-alt"></i> Text Analysis</h4>
+                        <div id="phi-analysis-output" class="text-output-box">
+                            <em>Analyzing...</em>
                         </div>
                     </div>
-                      <div class="results-section" id="live-phi-analysis" style="margin-top:2rem; display: none;">
-                     <h4><i class="fas fa-file-alt"></i>Text Analysis</h4>
-                     <div id="phi-analysis-output" class="text-output-box">
-                     <em>Waiting for analysis...</em>
-                     </div>
-                        </div>
-                      </div>
-
-
-
-
-
-
-
-
-
-
+                </div>
             </div>
         </div>
 
-        <!-- All your <div class="dashboard">…</div> here -->
-
-        <!-- 1) First load the module that grabs all your DOM refs -->
+        <!-- Scripts -->
         <script type="module" src="../static/js/dom-elements.js"></script>
-
-        <!-- 2) Then the helper that starts/stops the camera -->
         <script type="module" src="../static/js/live-capture-service.js"></script>
-
-        <!-- 3) Your API‐wrappers -->
         <script type="module" src="../static/js/phi3-service.js"></script>
         <script type="module" src="../static/js/acne-detection-service.js"></script>
-
-        <!-- 4) The upload‐only handlers -->
         <script type="module" src="../static/js/event-handlers.js"></script>
-
-        <!-- 5) Finally, the one that *boots* everything -->
         <script type="module" src="../static/js/app.js"></script>
 
-
-
         <script>
-            // Temporary debug code
             document.addEventListener('DOMContentLoaded', () => {
                 console.log('DOM fully loaded');
-                const startBtn = document.getElementById('start-live-btn');
-                if (startBtn) {
-                    startBtn.addEventListener('click', () => console.log('Start button clicked'));
-                }
             });
         </script>
-
-
-
+    </div>
 </body>
 
 </html>
