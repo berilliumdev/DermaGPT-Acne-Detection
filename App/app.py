@@ -6,32 +6,60 @@ import base64
 from PIL import Image
 import io
 import os
+from groq import Groq
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 app = Flask(__name__)
 
+# ============================================
+# MODEL PATHS
+# ============================================
 FACE_MODEL_PATH = r"..\Results-for-Both-Models\Face-Segmentation-2026\runs\detect\weights\best.pt"
 ACNE_MODEL_PATH = r"..\Results-for-Both-Models\Acne-Detection-2026\runs\detect\weights\best.pt"
 
+# ============================================
+# INITIALIZE GROQ CLIENT
+# ============================================
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+if GROQ_API_KEY:
+    groq_client = Groq(api_key=GROQ_API_KEY)
+    print("✅ Groq client initialized")
+else:
+    groq_client = None
+    print("⚠️ GROQ_API_KEY not found in .env file")
 
-# Load models
+# ============================================
+# LOAD YOLO MODELS
+# ============================================
 print("Loading models...")
 face_model = YOLO(FACE_MODEL_PATH)
 acne_model = YOLO(ACNE_MODEL_PATH)
 print("Models loaded!")
 
-# Region names
+# ============================================
+# REGION NAMES
+# ============================================
 REGION_NAMES = {
     0: "forehead", 1: "right-eye", 2: "right-cheek",
     3: "left-eye", 4: "left-cheek", 5: "between-eyes",
     6: "nose", 7: "mouth", 8: "chin"
 }
 
+# ============================================
+# SEVERITY FUNCTION
+# ============================================
 def get_severity(count):
     if count == 0: return "Healthy"
     elif count < 4: return "Mild"
     elif count < 7: return "Moderate"
     else: return "Severe"
 
+# ============================================
+# ROUTES
+# ============================================
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -59,7 +87,6 @@ def detect_acne():
         if face_results[0].boxes:
             for box in face_results[0].boxes:
                 x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
-                # Ensure coordinates are within image bounds
                 x1, y1 = max(0, x1), max(0, y1)
                 x2, y2 = min(img_width, x2), min(img_height, y2)
                 cid = int(box.cls[0])
@@ -104,26 +131,19 @@ def detect_acne():
         _, buffer = cv2.imencode('.jpg', annotated)
         annotated_base64 = base64.b64encode(buffer).decode('utf-8')
         
-        # ============================================
-        # CREATE CROPPED REGION IMAGES
-        # ============================================
+        # Create cropped region images
         region_images = []
         for region in face_regions:
             x1, y1, x2, y2 = region['bbox']
-            # Crop the region
             cropped = img_cv[y1:y2, x1:x2]
             if cropped.size > 0:
-                # Draw acne boxes on cropped image
                 for acne in acne_detections:
                     ax1, ay1, ax2, ay2 = acne['bbox']
-                    # Check if acne is within this region
                     if (ax1 >= x1 and ax2 <= x2 and ay1 >= y1 and ay2 <= y2):
-                        # Adjust coordinates to cropped image
                         cx1, cy1 = ax1 - x1, ay1 - y1
                         cx2, cy2 = ax2 - x1, ay2 - y1
                         cv2.rectangle(cropped, (cx1, cy1), (cx2, cy2), (0, 0, 255), 2)
                 
-                # Encode cropped image
                 _, cropped_buffer = cv2.imencode('.jpg', cropped)
                 cropped_base64 = base64.b64encode(cropped_buffer).decode('utf-8')
                 
@@ -152,30 +172,86 @@ def detect_acne():
 def phi3_analyze():
     try:
         data = request.json
-        total = data.get('total_acne', 0)
-        severity = data.get('overall_severity', 'Unknown')
-        region_sev = data.get('region_severity', {})
+        total_acne = data.get('total_acne', 0)
+        overall_severity = data.get('overall_severity', 'Unknown')
+        region_severity = data.get('region_severity', {})
         
-        analysis = f"📋 Dermatology Analysis Report\n\n"
-        analysis += f"Total acne: {total}\n"
-        analysis += f"Overall severity: {severity}\n\n"
-        analysis += "Regional breakdown:\n"
-        for region, sev in region_sev.items():
-            analysis += f"- {region}: {sev}\n"
-        
-        if severity == "Healthy":
-            analysis += "\nYour skin appears healthy."
-        elif severity == "Mild":
-            analysis += "\nMild acne detected. Consider OTC treatments."
-        elif severity == "Moderate":
-            analysis += "\nModerate acne detected. Consult a dermatologist."
+        # Build region breakdown text
+        if region_severity:
+            region_text = "\n".join([f"- {region}: {severity}" for region, severity in region_severity.items()])
         else:
-            analysis += "\nSevere acne detected. Please consult a dermatologist."
+            region_text = "No regions detected"
+        
+        # Check if Groq is available
+        if groq_client:
+            # Create prompt for Groq
+            prompt = f"""You are a dermatology assistant. Provide a brief, professional analysis based on these acne detection results.
+
+RESULTS:
+- Total acne lesions: {total_acne}
+- Overall severity: {overall_severity}
+- Severity by region:
+{region_text}
+
+Write a short analysis (3-4 sentences) that:
+1. States the overall finding
+2. Mentions the most affected area if any
+3. Gives one practical skincare recommendation
+4. Tells if they should see a dermatologist
+
+Be compassionate and professional. Do not give medical advice beyond general skincare."""
+
+            # Call Groq API
+            chat_completion = groq_client.chat.completions.create(
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are a helpful dermatology assistant. Provide accurate, responsible information about acne and skincare."
+                    },
+                    {
+                        "role": "user",
+                        "content": prompt,
+                    }
+                ],
+                model="llama-3.3-70b-versatile",
+                temperature=0.6,
+                max_tokens=300,
+            )
+            
+            analysis = chat_completion.choices[0].message.content
+            print("✅ Groq API response received")
+            
+        else:
+            # Fallback to hardcoded response if Groq is not available
+            analysis = f"📋 Dermatology Analysis Report\n\n"
+            analysis += f"Total acne: {total_acne}\n"
+            analysis += f"Overall severity: {overall_severity}\n\n"
+            analysis += "Regional breakdown:\n"
+            for region, sev in region_severity.items():
+                analysis += f"- {region}: {sev}\n"
+            
+            if overall_severity == "Healthy":
+                analysis += "\nYour skin appears healthy."
+            elif overall_severity == "Mild":
+                analysis += "\nMild acne detected. Consider OTC treatments."
+            elif overall_severity == "Moderate":
+                analysis += "\nModerate acne detected. Consult a dermatologist."
+            else:
+                analysis += "\nSevere acne detected. Please consult a dermatologist."
         
         return jsonify({'success': True, 'analysis': analysis})
+        
     except Exception as e:
-        return jsonify({'success': False, 'error': str(e)})
+        print(f"Groq API Error: {e}")
+        # Fallback response
+        analysis = f"Analysis complete. Total acne: {total_acne}. Severity: {overall_severity}. Please consult a dermatologist for medical advice."
+        return jsonify({'success': True, 'analysis': analysis})
 
 if __name__ == '__main__':
-    print("\n🚀 Server starting at http://127.0.0.1:5000\n")
+    print("\n" + "="*50)
+    print("🚀 DermaGPT Server Starting...")
+    print("="*50)
+    print(f"Groq API: {'✅ Connected' if groq_client else '⚠️ Not configured'}")
+    print("\n🌐 Open http://127.0.0.1:5000 in your browser")
+    print("="*50 + "\n")
     app.run(debug=True, host='127.0.0.1', port=5000)
