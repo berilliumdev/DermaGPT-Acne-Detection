@@ -317,10 +317,8 @@ body {
     text-align: center;
 }
 #marked-images-container {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr); 
-  gap: 1rem;
-  max-width: 960px;
+  display: block;
+  max-width: 1400px;
   margin: 0 auto;
 }
 
@@ -333,6 +331,151 @@ body {
   padding: 10px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.05);
   transition: transform 0.2s;
+}
+
+#marked-images-container figure:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+#marked-images-container img {
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: 160px;
+  object-fit: contain;
+  border-radius: 6px;
+}
+
+#marked-images-container figcaption {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: #444;
+  text-align: center;
+  text-transform: capitalize;
+}
+
+/* Acne results layout */
+.annotated-image-wrapper {
+  background: white;
+  border-radius: 16px;
+  padding: 0.8rem;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+  margin-bottom: 2rem;
+  max-width: 1600px;
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.annotated-image {
+  width: 100%;
+  max-height: 1200px;
+  min-height: 700px;
+  object-fit: contain;
+  border-radius: 14px;
+  border: 1px solid #e6e9ef;
+}
+
+.total-stats-card {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  background: #ffffff;
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+}
+
+.total-stats-card div {
+  min-width: 120px;
+}
+
+.grid-table-wrap {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  align-items: start;
+  margin-bottom: 1rem;
+  max-width: 1600px;
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.grid-panel,
+.severity-table-panel {
+  background: white;
+  border-radius: 16px;
+  padding: 0.95rem;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+}
+
+.grid-panel h4,
+.severity-table-panel h4 {
+  margin-bottom: 0.75rem;
+}
+
+.acne-results-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.7rem;
+  width: 100%;
+}
+
+.acne-results-grid .region-card {
+  min-height: 130px;
+}
+
+.severity-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.severity-table th,
+.severity-table td {
+  padding: 0.6rem 0.55rem;
+  border: 1px solid #e9ecef;
+  text-align: left;
+  font-size: 0.9rem;
+}
+
+.severity-table th {
+  background: #f6f8ff;
+  color: #2e3a59;
+  font-weight: 600;
+}
+
+.severity-table tbody tr:nth-child(even) {
+  background: #fafbff;
+}
+
+.severity-table tbody tr:hover {
+  background: #f0f4ff;
+}
+
+
+.region-card img {
+  width: 100%;
+  height: 110px;
+  object-fit: cover;
+  border-radius: 6px;
+  margin-bottom: 0.6rem;
+}
+
+@media (max-width: 1024px) {
+  .grid-table-wrap {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 768px) {
+  .total-stats-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 
 #marked-images-container figure:hover {
@@ -389,8 +532,8 @@ body {
 .region-card img {
     width: auto;
     max-width: 100%;
-    max-height: 160px;     /* 🔧 prevents overly tall images */
-    object-fit: contain;   /* 🔧 no cropping or distortion */
+    max-height: 120px;
+    object-fit: contain;
     border-radius: 6px;
     margin-bottom: 8px;
 }
@@ -413,7 +556,7 @@ body {
 /* Placeholder for missing regions */
 .missing-region {
     background: #f5f5f5;
-    height: 160px;
+    height: 140px;
     display: flex;
     align-items: center;
     justify-content: center;

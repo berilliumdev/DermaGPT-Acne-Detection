@@ -17,8 +17,20 @@ app = Flask(__name__)
 # ============================================
 # MODEL PATHS
 # ============================================
-FACE_MODEL_PATH = r"..\Results-for-Both-Models\Face-Segmentation-2026\runs\detect\weights\best.pt"
-ACNE_MODEL_PATH = r"..\Results-for-Both-Models\Acne-Detection-2026\runs\detect\weights\best.pt"
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
+DEFAULT_FACE_MODEL_PATH = os.path.join(BASE_DIR, "Results-for-Both-Models", "9_Regions_Model_Weights.pt")
+DEFAULT_ACNE_MODEL_PATH = os.path.join(BASE_DIR, "Results-for-Both-Models", "Acne_Detection_Model_Weights.pt")
+
+FACE_MODEL_PATH = os.getenv("FACE_MODEL_PATH", DEFAULT_FACE_MODEL_PATH)
+ACNE_MODEL_PATH = os.getenv("ACNE_MODEL_PATH", DEFAULT_ACNE_MODEL_PATH)
+
+print(f"Using face model path: {FACE_MODEL_PATH}")
+print(f"Using acne model path: {ACNE_MODEL_PATH}")
+
+if not os.path.exists(FACE_MODEL_PATH):
+    raise FileNotFoundError(f"Face model file not found at {FACE_MODEL_PATH}")
+if not os.path.exists(ACNE_MODEL_PATH):
+    raise FileNotFoundError(f"Acne model file not found at {ACNE_MODEL_PATH}")
 
 # ============================================
 # INITIALIZE GROQ CLIENT
