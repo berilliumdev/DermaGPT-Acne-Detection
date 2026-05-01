@@ -25,7 +25,6 @@ Thumbs.db
 
 # Logs
 *.log
-runs/
 *.csv
 
 # Flask
