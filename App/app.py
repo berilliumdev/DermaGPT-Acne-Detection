@@ -187,29 +187,34 @@ def phi3_analyze():
         total_acne = data.get('total_acne', 0)
         overall_severity = data.get('overall_severity', 'Unknown')
         region_severity = data.get('region_severity', {})
-        
-        # Build region breakdown text
+        region_acne_counts = data.get('region_acne_counts', {})
+
+        # Build per-region breakdown text (only regions that were actually detected)
         if region_severity:
-            region_text = "\n".join([f"- {region}: {severity}" for region, severity in region_severity.items()])
+            region_lines = []
+            for region, severity in region_severity.items():
+                count = region_acne_counts.get(region, 0)
+                region_lines.append(f"- {region}: {count} lesion(s), severity {severity}")
+            region_text = "\n".join(region_lines)
         else:
             region_text = "No regions detected"
-        
+
         # Check if Groq is available
         if groq_client:
             # Create prompt for Groq
-            prompt = f"""You are a dermatology assistant. Provide a brief, professional analysis based on these acne detection results.
+            prompt = f"""You are a dermatology assistant. Analyze the following acne detection results REGION BY REGION.
 
-RESULTS:
+RESULTS (only the detected facial regions are listed):
 - Total acne lesions: {total_acne}
 - Overall severity: {overall_severity}
-- Severity by region:
+- Per-region data:
 {region_text}
 
-Write a short analysis (3-4 sentences) that:
-1. States the overall finding
-2. Mentions the most affected area if any
-3. Gives one practical skincare recommendation
-4. Tells if they should see a dermatologist
+Write the analysis as a SEPARATE short paragraph for EACH region listed above (and ONLY those regions, never mention a region that is not in the list). For every region, use this format:
+
+<Region name> (<severity>): one or two sentences describing the finding in that specific region and one practical skincare tip tailored to it.
+
+After the per-region sections, add a final line starting with "Overall:" that gives a one-sentence summary and clearly states whether the person should see a dermatologist.
 
 Be compassionate and professional. Do not give medical advice beyond general skincare."""
 
@@ -234,22 +239,31 @@ Be compassionate and professional. Do not give medical advice beyond general ski
             print("✅ Groq API response received")
             
         else:
-            # Fallback to hardcoded response if Groq is not available
-            analysis = f"📋 Dermatology Analysis Report\n\n"
-            analysis += f"Total acne: {total_acne}\n"
-            analysis += f"Overall severity: {overall_severity}\n\n"
-            analysis += "Regional breakdown:\n"
-            for region, sev in region_severity.items():
-                analysis += f"- {region}: {sev}\n"
-            
-            if overall_severity == "Healthy":
-                analysis += "\nYour skin appears healthy."
-            elif overall_severity == "Mild":
-                analysis += "\nMild acne detected. Consider OTC treatments."
-            elif overall_severity == "Moderate":
-                analysis += "\nModerate acne detected. Consult a dermatologist."
+            # Fallback response if Groq is not available: one section per detected region
+            region_tips = {
+                "Healthy": "looks clear, keep up a gentle daily cleansing routine.",
+                "Mild": "shows a few lesions, an over-the-counter cleanser with salicylic acid can help.",
+                "Moderate": "shows noticeable breakouts, consider a targeted treatment and monitor it.",
+                "Severe": "is heavily affected, a dermatologist visit is recommended for this area."
+            }
+
+            analysis = "📋 Dermatology Analysis Report (per region)\n\n"
+            if region_severity:
+                for region, sev in region_severity.items():
+                    count = region_acne_counts.get(region, 0)
+                    tip = region_tips.get(sev, "")
+                    analysis += f"{region} ({sev}): {count} lesion(s) detected, this area {tip}\n\n"
             else:
-                analysis += "\nSevere acne detected. Please consult a dermatologist."
+                analysis += "No facial regions were detected in the image.\n\n"
+
+            if overall_severity == "Healthy":
+                analysis += "Overall: your skin appears healthy. A dermatologist visit is not needed right now."
+            elif overall_severity == "Mild":
+                analysis += "Overall: mild acne detected. Over-the-counter treatments are usually enough; see a dermatologist if it persists."
+            elif overall_severity == "Moderate":
+                analysis += "Overall: moderate acne detected. Consider consulting a dermatologist."
+            else:
+                analysis += "Overall: severe acne detected. Please consult a dermatologist."
         
         return jsonify({'success': True, 'analysis': analysis})
         

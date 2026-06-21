@@ -25,7 +25,8 @@ export async function analyzeWithPhi3(imageFile) {
         body: JSON.stringify({
             total_acne: detectResult.total_acne,
             overall_severity: detectResult.overall_severity,
-            region_severity: detectResult.region_severity
+            region_severity: detectResult.region_severity,
+            region_acne_counts: detectResult.region_acne_counts
         })
     });
     
